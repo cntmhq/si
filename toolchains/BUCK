@@ -1,21 +1,11 @@
 load("@prelude//tests:test_toolchain.bzl", "noop_test_toolchain")
 load("@prelude//toolchains:genrule.bzl", "system_genrule_toolchain")
-
-load(
-    "@prelude//toolchains:python.bzl",
-    "system_python_bootstrap_toolchain",
-    "system_python_toolchain",
-)
-load(
-    "@prelude//toolchains:remote_test_execution.bzl",
-    "remote_test_execution_toolchain",
-)
-load("@prelude-si//toolchains:clang_distribution.bzl", "download_clang_distribution", "hermetic_clang_toolchain")
-load("@prelude-si//toolchains:deno_distribution.bzl", "download_deno_distribution")
+load("@prelude//toolchains:python.bzl", "system_python_bootstrap_toolchain", "system_python_toolchain")
+load("@prelude//toolchains:remote_test_execution.bzl", "remote_test_execution_toolchain")
+load("@prelude//toolchains:rust.bzl", "system_rust_toolchain")
+load("@prelude//toolchains:cxx.bzl", "system_cxx_toolchain")
 load("@prelude-si//deno:toolchain.bzl", "deno_toolchain")
 load("@prelude-si//:deno.bzl", "deno_target_runtime")
-load("@prelude-si//toolchains:rust_distribution.bzl", "download_rust_distribution", "hermetic_rust_toolchain")
-load("@prelude-si//toolchains:python_distribution.bzl", "download_python_distribution", "hermetic_python_toolchain", "hermetic_python_bootstrap_toolchain")
 load("@prelude-si//artifact:toolchain.bzl", "artifact_toolchain")
 load("@prelude-si//build_context:toolchain.bzl", "build_context_toolchain")
 load("@prelude-si//build_metadata:toolchain.bzl", "build_metadata_toolchain")
@@ -31,32 +21,6 @@ load("@prelude-si//shell:toolchain.bzl", "shell_toolchain")
 load("@prelude-si//toml:toolchain.bzl", "toml_toolchain")
 load(":toolchain.bzl", "toolchain_alias")
 
-download_clang_distribution(
-    name = "clang",
-    version = "20.1.0",
-)
-
-download_deno_distribution(
-    name = "deno_dist",
-    version = "2.2.12",
-)
-
-download_rust_distribution(
-    name = "rust_dist",
-    version = "1.88.0",
-)
-
-download_rust_distribution(
-    name = "rustfmt_nightly_dist",
-    version = "nightly-2025-04-17",
-)
-
-download_python_distribution(
-    name = "python_dist",
-    version = "3.13.6",
-)
-
-
 remote_test_execution_toolchain(
     name = "remote_test_execution",
     visibility = ["PUBLIC"],
@@ -67,19 +31,9 @@ noop_test_toolchain(
     visibility = ["PUBLIC"],
 )
 
-hermetic_clang_toolchain(
+# Use system CXX toolchain (clang from Nix devshell via PATH)
+system_cxx_toolchain(
     name = "cxx",
-    distribution = ":clang",
-    binary_linker_flags = [
-        "-nostdlib++",
-    ] + select({
-        "config//os:linux": ["-lclang_rt.builtins"],
-        "config//os:macos": ["-lclang_rt.osx"],
-        "DEFAULT": ["-lclang_rt.builtins"],
-    }),
-    linker_flags = [
-        "--rtlib=compiler-rt",
-    ],
     visibility = ["PUBLIC"],
 )
 
@@ -88,19 +42,25 @@ system_genrule_toolchain(
     visibility = ["PUBLIC"],
 )
 
-hermetic_python_bootstrap_toolchain(
+# Use system Python bootstrap toolchain (python3 from Nix devshell via PATH)
+system_python_bootstrap_toolchain(
     name = "python_bootstrap",
-    distribution = ":python_dist",
     visibility = ["PUBLIC"],
 )
 
-hermetic_rust_toolchain(
+# Use system Python toolchain (python3 from Nix devshell via PATH)
+system_python_toolchain(
+    name = "python",
+    visibility = ["PUBLIC"],
+)
+
+# Use system Rust toolchains (rustc, clippy-driver, rustdoc from Nix devshell via PATH)
+system_rust_toolchain(
     name = "rust_release",
-    distribution = ":rust_dist",
     default_edition = "2024",
     clippy_toml = "root//:clippy.toml",
     visibility = ["PUBLIC"],
-    # rustc_target_triple auto-detected from distribution target
+    rustc_target_triple = "x86_64-unknown-linux-gnu",
     rustc_flags = [
         "-Copt-level=3",
         # https://doc.rust-lang.org/cargo/reference/profiles.html#debug
@@ -111,42 +71,22 @@ hermetic_rust_toolchain(
         "-Coverflow-checks=false",
         "-Clto=false",
         "-Ccodegen-units=16",
-    ] + select({
-        "config//os:linux": [
-            # Use hermetic toolchain for linking on Linux
-            "-Clink-arg=-fuse-ld=lld",
-            # Override GCC runtime with LLVM runtime at link time on Linux
-            "-Clink-arg=-Wl,--allow-shlib-undefined",
-        ],
-        "DEFAULT": [
-            # On Darwin, use system linker for better SDK integration
-        ],
-    })
+    ],
 )
 
-hermetic_rust_toolchain(
+system_rust_toolchain(
     name = "rust_debug",
-    distribution = ":rust_dist",
     default_edition = "2024",
     clippy_toml = "root//:clippy.toml",
     visibility = ["PUBLIC"],
+    rustc_target_triple = "x86_64-unknown-linux-gnu",
     rustc_flags = [
         "-Copt-level=0",
         "-Cdebuginfo=full",
         "-Ccodegen-units=256",
         "-Cdebug-assertions=true",
         "-Coverflow-checks=true",
-    ] + select({
-        "config//os:linux": [
-            # Use hermetic toolchain for linking on Linux
-            "-Clink-arg=-fuse-ld=lld",
-            # Override GCC runtime with LLVM runtime at link time on Linux
-            "-Clink-arg=-Wl,--allow-shlib-undefined",
-        ],
-        "DEFAULT": [
-            # On Darwin, use system linker for better SDK integration
-        ],
-    }),
+    ],
 )
 
 toolchain_alias(
@@ -168,10 +108,10 @@ build_metadata_toolchain(
     visibility = ["PUBLIC"],
 )
 
-# Platform-specific toolchain instances
+# Deno toolchain using deno from Nix devshell via PATH
 deno_toolchain(
     name = "deno-linux-x86_64",
-    deno_exe = "$(location :deno_dist-extraction)/toolchain/bin/deno",
+    deno_exe = "deno",
     target_string = "linux-x86_64",
 )
 
@@ -183,7 +123,7 @@ deno_target_runtime(
 
 deno_toolchain(
     name = "deno-linux-aarch64",
-    deno_exe = "$(location :deno_dist-extraction)/toolchain/bin/deno",
+    deno_exe = "deno",
     target_string = "linux-aarch64",
 )
 
@@ -195,7 +135,7 @@ deno_target_runtime(
 
 deno_toolchain(
     name = "deno-darwin-x86_64",
-    deno_exe = "$(location :deno_dist-extraction)/toolchain/bin/deno",
+    deno_exe = "deno",
     target_string = "darwin-x86_64",
 )
 
@@ -207,7 +147,7 @@ deno_target_runtime(
 
 deno_toolchain(
     name = "deno-darwin-aarch64",
-    deno_exe = "$(location :deno_dist-extraction)/toolchain/bin/deno",
+    deno_exe = "deno",
     target_string = "darwin-aarch64",
 )
 
@@ -219,7 +159,7 @@ deno_target_runtime(
 
 deno_toolchain(
     name = "deno-windows-x86_64",
-    deno_exe = "$(location :deno_dist-extraction)/toolchain/bin/deno",
+    deno_exe = "deno",
     target_string = "windows-x86_64",
 )
 
@@ -231,7 +171,7 @@ deno_target_runtime(
 
 deno_toolchain(
     name = "deno-windows-aarch64",
-    deno_exe = "$(location :deno_dist-extraction)/toolchain/bin/deno",
+    deno_exe = "deno",
     target_string = "windows-aarch64",
 )
 
@@ -255,12 +195,6 @@ toolchain_alias(
             "prelude//os:windows": ":deno-windows-x86_64",
         }),
     }),
-    visibility = ["PUBLIC"],
-)
-
-hermetic_python_toolchain(
-    name = "python",
-    distribution = ":python_dist",
     visibility = ["PUBLIC"],
 )
 
@@ -305,11 +239,10 @@ si_python_toolchain(
     visibility = ["PUBLIC"],
 )
 
+# si_rust_toolchain without dist dependencies - uses rustfmt from PATH
 si_rust_toolchain(
     name = "si_rust",
     rustfmt_toml = "root//:rustfmt.toml",
-    rust_dist = ":rust_dist",
-    rustfmt_dist = ":rustfmt_nightly_dist",
     visibility = ["PUBLIC"],
 )
 
@@ -323,6 +256,5 @@ toml_toolchain(
     name = "toml",
     taplo_config = "root//:.taplo.toml",
     cargo_sort_config = "root//:tomlfmt.toml",
-    cargo_dist = ":rust_dist",
     visibility = ["PUBLIC"],
 )

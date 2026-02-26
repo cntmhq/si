@@ -302,7 +302,7 @@ artifact_download = rule(
     attrs = {
         "destination": attrs.string(
             doc = """Destination base URL (e.g., https://artifacts.systeminit.com/toolchains).""",
-            default = "https://artifacts.systeminit.com/toolchains",
+            default = "http://127.0.0.1:8080/toolchains",
         ),
         "family": attrs.string(
             doc = """Artifact family (rust, python, clang, deno).""",

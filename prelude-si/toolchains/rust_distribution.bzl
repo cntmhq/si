@@ -23,7 +23,7 @@ load(
 _RUST_S3_CHECKSUMS = {
     "1.88.0": {
         "linux": {
-            "x86_64": "1b3609cf31991835b8384e719f129606ff076ab9ddd1bb2b6695e845f668df35",
+            "x86_64": "26a0476110a4dffceda533d42fc7a0993d0545d27ee3ee02bec7d05b5ead8943",
             "aarch64": "b31e784911e4f642271a7ba658d0158bbb56e2ba93a6b0170ad51d75fa9c6fa8",
         },
         "darwin": {
@@ -33,7 +33,7 @@ _RUST_S3_CHECKSUMS = {
     },
     "nightly-2025-04-17": {
         "linux": {
-            "x86_64": "9bd371fd9857e853af6ec66757795540e43ff6edec72c8d16271cf1fe267014a",
+            "x86_64": "db0d3486560a1ff4ded5010a3f89451af2cbdaa5852244ea4c531f561ccdc877",
             "aarch64": "e8a89ccae40bc7dae32111f814533835a3e4cca38d632d4442d1ed8a1e5a5157",
         },
         "darwin": {

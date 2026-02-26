@@ -91,6 +91,7 @@
           glibc.libgcc
           lvm2
           llvmPackages.libclang.lib
+          llvmPackages.lld
         ]
         ++ lib.optionals pkgs.stdenv.isDarwin [
           libiconv

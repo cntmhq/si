@@ -19,7 +19,7 @@ load("@prelude-si//toolchains:extraction.bzl", "ToolchainExtractionInfo")
 _CLANG_S3_CHECKSUMS = {
     "20.1.0": {
         "linux": {
-            "x86_64": "1aa13150f61144bb4718aab8238f7d7239741534bf064952c4eca6c630000a3d",
+            "x86_64": "db63f03f860fd3e9872cbbc74448bfd7923d514e45fc8f21ab1c6fac5e293656",
             "aarch64": "a6a4e82814e7669f71e1343da9a03c91b7514b4d5ac26621401b958c007e3d24",
         },
         "darwin": {
@@ -155,8 +155,13 @@ def _hermetic_clang_toolchain_impl(ctx: AnalysisContext) -> list[Provider]:
     # libgcc path is now included directly in the unified archive for Linux
     # For Darwin, add clang runtime library path
     libgcc_linker_flags = []
+    sysroot_linker_flags = []
     if "x86_64-unknown-linux-gnu" == dist.target:
         libgcc_linker_flags = [cmd_args(dist.directory, format = "-L{}/lib/x86_64-linux-gnu")]
+        sysroot_linker_flags = [
+            cmd_args(dist.directory, format = "-B{}/lib/x86_64-linux-gnu"),
+            cmd_args(dist.directory, format = "-L{}/lib/x86_64-linux-gnu"),
+        ]
     elif "aarch64-unknown-linux-gnu" == dist.target:
         libgcc_linker_flags = [cmd_args(dist.directory, format = "-L{}/lib/aarch64-linux-gnu")]
     elif "aarch64-apple-darwin" == dist.target:
@@ -205,7 +210,7 @@ def _hermetic_clang_toolchain_impl(ctx: AnalysisContext) -> list[Provider]:
             link_style = LinkStyle(ctx.attrs.link_style),
             link_weight = 1,
             linker = RunInfo(args = cmd_args(clang_wrapper, dist.directory, "clang++", hidden = [dist.directory])),
-            linker_flags = cmd_args(ctx.attrs.linker_flags),
+            linker_flags = cmd_args(ctx.attrs.linker_flags, sysroot_linker_flags),
             object_file_extension = "o",
             shlib_interfaces = ShlibInterfacesMode("disabled"),
             shared_dep_runtime_ld_flags = ctx.attrs.shared_dep_runtime_ld_flags,

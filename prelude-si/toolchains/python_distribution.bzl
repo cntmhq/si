@@ -14,7 +14,7 @@ load("@prelude-si//toolchains:extraction.bzl", "ToolchainExtractionInfo")
 _PYTHON_S3_CHECKSUMS = {
     "3.13.6": {
         "linux": {
-            "x86_64": "2831557346ce5be01856455ad1fe3a5c4438e84d12ef9e8860b8891c5fed6d33",
+            "x86_64": "2258789468a9036426e4a001adfe00dc501989b385d90945fba6cae18795d10a",
             "aarch64": "81e04c6c473952170081132dc3bed85b1c214943d245042790eeb10334980d13",
         },
         "darwin": {

@@ -21,7 +21,7 @@ load(
 _DENO_S3_CHECKSUMS = {
     "2.2.12": {
         "linux": {
-            "x86_64": "084d318f605f0d302ea2503b00082cfd97559f3a24286eb2970971344918a8cc",
+            "x86_64": "e6455cfb79e5791a026cd16a43d2b925d3c892ca8425e52b6ffeec09ff9d0a4a",
             "aarch64": "2f1450598f09eff5a7457cb78a0bc32e8e61bd1b505f6f1893a2f5cbc845e4d1",
         },
         "darwin": {
