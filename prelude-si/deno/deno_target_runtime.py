@@ -7,9 +7,20 @@ runtime binary without performing an actual compilation.
 """
 import argparse
 import pathlib
+import shutil
 import subprocess
 import sys
 import tempfile
+
+
+def resolve_exe(p: pathlib.Path) -> pathlib.Path:
+    """If p has no directory component, look it up on PATH via shutil.which."""
+    if p.parent == pathlib.Path('.'):
+        found = shutil.which(p.name)
+        if found:
+            return pathlib.Path(found)
+    return p.resolve()
+
 
 # Target mapping: canonical target string -> Deno target triple
 TARGET_TO_DENO_TRIPLE = {
@@ -60,7 +71,7 @@ def download_target_runtime(
     output_dir: pathlib.Path,
 ) -> None:
     """Download the target runtime by performing a minimal cross-compilation."""
-    deno_exe_abs = deno_exe.resolve()
+    deno_exe_abs = resolve_exe(deno_exe)
     output_dir_abs = output_dir.resolve()
     output_dir_abs.mkdir(parents=True, exist_ok=True)
 

@@ -5,9 +5,19 @@ Builds a portable, standalone deno binary.
 import argparse
 import os
 import pathlib
+import shutil
 import subprocess
 import sys
 from typing import List, Optional
+
+
+def resolve_exe(p: pathlib.Path) -> pathlib.Path:
+    """If p has no directory component, look it up on PATH via shutil.which."""
+    if p.parent == pathlib.Path('.'):
+        found = shutil.which(p.name)
+        if found:
+            return pathlib.Path(found)
+    return p.resolve()
 
 
 def parse_args() -> argparse.Namespace:
@@ -67,7 +77,7 @@ def run(
     workspace_dir: Optional[pathlib.Path],
 ) -> None:
     """Run deno run with the specified arguments."""
-    deno_binary_abs = deno_binary.resolve()
+    deno_binary_abs = resolve_exe(deno_binary)
     deno_dir_abs = deno_dir.resolve() if deno_dir else None
     cwd = workspace_dir.resolve() if workspace_dir else pathlib.Path.cwd()
 

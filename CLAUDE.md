@@ -82,6 +82,36 @@ buck2 run //support/buck2:sync-cargo-deps
 buck2 run //lib/dal:doc -- --document-private-items --open
 ```
 
+## NixOS Build Restoration (Post-Archive)
+
+SI was archived on 2025-02-06 and its S3 artifact hosting at `artifacts.systeminit.com` was removed. The build pipeline has been restored for NixOS using **system toolchains** instead of hermetic downloads.
+
+### What was changed
+
+| File | Change |
+|------|--------|
+| `toolchains/BUCK` | Rewritten to use `system_rust_toolchain`, `system_cxx_toolchain`, `system_python_bootstrap_toolchain` — tools from Nix devshell PATH instead of S3 downloads |
+| `flake.nix` | Added `llvmPackages.lld` (for `-fuse-ld=lld`), `prisma-utils` input for Prisma engine binaries |
+| `dev/Tiltfile` | Prisma engine env vars for `auth-db-seed` and `auth-api`; `http://` URLs instead of `https://` for local dev; `module-index` auto-start enabled |
+| `app/web/.env` | `VITE_AUTH_PORTAL_URL=http://localhost:9000`, `VITE_MODULE_INDEX_API_URL=http://localhost:5157` |
+| `prelude-si/deno/*.py` | Fixed `resolve_exe()` to use `shutil.which()` for plain binary names (NixOS PATH lookup) |
+| `bin/auth-api/src/lib/stripe.ts` | Lazy Stripe init — doesn't crash on startup when `STRIPE_API_KEY` is unset |
+
+### Prisma on NixOS
+
+Prisma 5.20.0 engine binaries are provided via `nix-prisma-utils` (see `flake.nix`). The nix store path is referenced directly in `dev/Tiltfile` for the `auth-db-seed` and `auth-api` resources.
+
+If you bump the Prisma version in `bin/auth-api/package.json`:
+1. Find the new engine commit hash in `node_modules/prisma/build/index.js` (search for the 40-char hex string)
+2. Update `versionString` in `flake.nix`
+3. Run `nix build .#devShells.x86_64-linux.default` with `hash = ""` to get the correct hash
+4. Fill in the hash and update the `_prisma_bin` path in `dev/Tiltfile`
+
+### Known limitations
+
+- `STRIPE_API_KEY`, `AUTH0_CLIENT_SECRET`, `AUTH0_M2M_CLIENT_SECRET`, `LAGO_API_KEY`, `GH_TOKEN` are not set for local dev — Stripe/Auth0/Lago routes will fail if called, but the service starts fine
+- `module-index` starts but has no data — assets/components/functions must be imported manually or seeded
+
 ## Architecture Overview
 
 System Initiative is an AI-native infrastructure automation platform built as a Rust monorepo with a Vue 3 frontend.
@@ -178,3 +208,4 @@ publish.workspace = true
 - Requires Docker
 - On macOS/WSL2: increase file descriptor limit (`ulimit -n 10240`)
 - On Linux: may need to increase `fs.inotify.max_user_watches`
+- On NixOS: the build pipeline uses system toolchains from the Nix devshell — no S3 downloads required

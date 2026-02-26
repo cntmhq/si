@@ -329,7 +329,7 @@ si_buck2_resource(
     ],
     serve_env = {
         "VITE_AUTH_API_URL": "http://localhost:9001",
-        "VITE_AUTH_PORTAL_URL": "https://localhost:9000"
+        "VITE_AUTH_PORTAL_URL": "http://localhost:9000"
     },
     readiness_probe = probe(
         period_secs = 5,
@@ -378,7 +378,7 @@ si_buck2_resource(
 # Locally build and run `module-index`
 si_buck2_resource(
     "//bin/module-index:module-index",
-    auto_init = False,
+    auto_init = True,
     resource_deps = [
         "otelcol",
         "postgres",
@@ -400,9 +400,17 @@ si_buck2_resource(
 
 # Reset and seed the auth database before starting auth-api
 # This runs Prisma migrations and generates the client
+_prisma_bin = "/nix/store/rx01pji3d00kipjfvxqcqii7din6zbsn-prisma-bin-06fc58a368dc7be9fbbbe894adf8d445d208c284"
+_prisma_env = " ".join([
+    "PRISMA_SCHEMA_ENGINE_BINARY={}/bin/schema-engine".format(_prisma_bin),
+    "PRISMA_QUERY_ENGINE_BINARY={}/bin/query-engine".format(_prisma_bin),
+    "PRISMA_QUERY_ENGINE_LIBRARY={}/lib/libquery_engine.node".format(_prisma_bin),
+    "PRISMA_FMT_BINARY={}/bin/prisma-fmt".format(_prisma_bin),
+    "PRISMA_ENGINES_CHECKSUM_IGNORE_MISSING=1",
+])
 local_resource(
     "auth-db-seed",
-    cmd = "buck2 run //bin/auth-api:db-reset",
+    cmd = "{} buck2 run //bin/auth-api:db-reset".format(_prisma_env),
     labels = resource_labels("auth-db-seed"),
     resource_deps = [
         "postgres",
@@ -419,6 +427,11 @@ si_buck2_resource(
     ],
     serve_env = {
         "LOCAL_AUTH_MODE": "true",
+        "PRISMA_SCHEMA_ENGINE_BINARY": _prisma_bin + "/bin/schema-engine",
+        "PRISMA_QUERY_ENGINE_BINARY": _prisma_bin + "/bin/query-engine",
+        "PRISMA_QUERY_ENGINE_LIBRARY": _prisma_bin + "/lib/libquery_engine.node",
+        "PRISMA_FMT_BINARY": _prisma_bin + "/bin/prisma-fmt",
+        "PRISMA_ENGINES_CHECKSUM_IGNORE_MISSING": "1",
     },
     # readiness_probe = probe(
     #     period_secs = 5,

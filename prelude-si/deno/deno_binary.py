@@ -12,6 +12,16 @@ import sys
 import tempfile
 from typing import List, Optional
 
+
+def resolve_exe(p: pathlib.Path) -> pathlib.Path:
+    """If p has no directory component, look it up on PATH via shutil.which."""
+    if p.parent == pathlib.Path('.'):
+        found = shutil.which(p.name)
+        if found:
+            return pathlib.Path(found)
+    return p.resolve()
+
+
 # Target mapping: canonical target string -> Deno target triple
 TARGET_TO_DENO_TRIPLE = {
     "linux-x86_64": "x86_64-unknown-linux-gnu",
@@ -129,7 +139,7 @@ def run_compile(
     target: Optional[str] = None,
 ) -> None:
     """Run deno compile with the specified arguments."""
-    deno_binary_abs = deno_binary.resolve()
+    deno_binary_abs = resolve_exe(deno_binary)
     output_path_abs = output_path.resolve()
     deno_dir_abs = deno_dir.resolve() if deno_dir else None
     cwd = workspace_dir.resolve() if workspace_dir else pathlib.Path.cwd()

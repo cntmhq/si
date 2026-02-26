@@ -1,9 +1,18 @@
 import Stripe from "stripe";
 
-const stripe = new Stripe(process.env.STRIPE_API_KEY as string);
+let stripe: Stripe | null = null;
+function getStripe(): Stripe {
+  if (!stripe) {
+    if (!process.env.STRIPE_API_KEY) {
+      throw new Error("STRIPE_API_KEY is not set");
+    }
+    stripe = new Stripe(process.env.STRIPE_API_KEY);
+  }
+  return stripe;
+}
 
 export async function checkCustomerPaymentMethodSet(stripeCustomerId: string) {
-  const resp = await stripe.customers.listPaymentMethods(stripeCustomerId);
+  const resp = await getStripe().customers.listPaymentMethods(stripeCustomerId);
   if (resp.data && resp.data.length > 0) {
     return true;
   }

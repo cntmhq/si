@@ -26,6 +26,7 @@
     # See: https://aalbacetef.io/blog/nix-pinning-a-specific-package-version-in-a-flake-using-overlays/
     # See: https://lazamar.co.uk/nix-versions/?channel=nixpkgs-unstable&package=deno
     pinnedDenoVersion.url = "github:NixOS/nixpkgs/4684fd6b0c01e4b7d99027a34c93c2e09ecafee2";
+    prisma-utils.url = "github:VanCoding/nix-prisma-utils";
   };
 
   outputs = {
@@ -33,6 +34,7 @@
     flake-utils,
     rust-overlay,
     pinnedDenoVersion,
+    prisma-utils,
     ...
   }:
     flake-utils.lib.eachDefaultSystem (system: let
@@ -49,6 +51,13 @@
       ];
 
       pkgs = import nixpkgs {inherit overlays system;};
+
+      # Prisma 5.20.0 — version string sourced from node_modules/prisma/build/index.js
+      prisma = prisma-utils.lib.prisma-factory {
+        inherit pkgs;
+        versionString = "5.20.0-12.06fc58a368dc7be9fbbbe894adf8d445d208c284";
+        hash = "sha256-JPam6PUgSCVXvpSguiGEH6cap4hOODpnNo+vj9+Vvd4=";
+      };
 
       rustVersion = pkgs.rust-bin.fromRustupToolchainFile ./rust-toolchain;
       rust-toolchain = rustVersion.override {
@@ -364,7 +373,9 @@
         };
 
         devShells.default = mkShell {
-          shellHook = with pkgs; ''
+          shellHook = prisma.shellHook + ''
+            export PRISMA_ENGINES_CHECKSUM_IGNORE_MISSING=1
+          '' + (with pkgs; ''
             mkdir -p .buckconfig.d
             if [ -n "$SI_RBE_TOKEN" ]; then
               cat > .buckconfig.d/10-nix.buckconfig <<EOF
@@ -387,7 +398,7 @@ EOF
               $NIX_CFLAGS_COMPILE"
             export OUT=${placeholder "out"}
             echo $OUT
-          '' else "");
+          '' else ""));
           packages =
             [
               alejandra

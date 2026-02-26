@@ -18,6 +18,24 @@
         "type": "github"
       }
     },
+    "flake-utils_2": {
+      "inputs": {
+        "systems": "systems_2"
+      },
+      "locked": {
+        "lastModified": 1731533236,
+        "narHash": "sha256-l0KFg5HjrsfsO/JpG+r7fRrqm12kzFHyUHqHCVpMMbI=",
+        "owner": "numtide",
+        "repo": "flake-utils",
+        "rev": "11707dc2f618dd54ca8739b309ec4fc024de578b",
+        "type": "github"
+      },
+      "original": {
+        "owner": "numtide",
+        "repo": "flake-utils",
+        "type": "github"
+      }
+    },
     "nixpkgs": {
       "locked": {
         "lastModified": 1755736253,
@@ -25,6 +43,22 @@
         "owner": "NixOS",
         "repo": "nixpkgs",
         "rev": "596312aae91421d6923f18cecce934a7d3bfd6b8",
+        "type": "github"
+      },
+      "original": {
+        "owner": "NixOS",
+        "ref": "nixpkgs-unstable",
+        "repo": "nixpkgs",
+        "type": "github"
+      }
+    },
+    "nixpkgs_2": {
+      "locked": {
+        "lastModified": 1738703096,
+        "narHash": "sha256-1MABVDwNpAUrUDvyM6PlHlAB1eTWAX0eNYCzdsZ54NI=",
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "f7384aacd0ecd28681a99269ac0dff2c3a805d63",
         "type": "github"
       },
       "original": {
@@ -50,11 +84,32 @@
         "type": "github"
       }
     },
+    "prisma-utils": {
+      "inputs": {
+        "flake-utils": "flake-utils_2",
+        "nixpkgs": "nixpkgs_2",
+        "treefmt-nix": "treefmt-nix"
+      },
+      "locked": {
+        "lastModified": 1768336037,
+        "narHash": "sha256-rL3ZTAyjaK4A10SQattl8kXRorZ4mzEkOi/oWRYTdRs=",
+        "owner": "VanCoding",
+        "repo": "nix-prisma-utils",
+        "rev": "40b33511fae1c2b24317bca888f09471c9a1675c",
+        "type": "github"
+      },
+      "original": {
+        "owner": "VanCoding",
+        "repo": "nix-prisma-utils",
+        "type": "github"
+      }
+    },
     "root": {
       "inputs": {
         "flake-utils": "flake-utils",
         "nixpkgs": "nixpkgs",
         "pinnedDenoVersion": "pinnedDenoVersion",
+        "prisma-utils": "prisma-utils",
         "rust-overlay": "rust-overlay"
       }
     },
@@ -90,6 +145,42 @@
       "original": {
         "owner": "nix-systems",
         "repo": "default",
+        "type": "github"
+      }
+    },
+    "systems_2": {
+      "locked": {
+        "lastModified": 1681028828,
+        "narHash": "sha256-Vy1rq5AaRuLzOxct8nz4T6wlgyUR7zLU309k9mBC768=",
+        "owner": "nix-systems",
+        "repo": "default",
+        "rev": "da67096a3b9bf56a91d16901293e51ba5b49a27e",
+        "type": "github"
+      },
+      "original": {
+        "owner": "nix-systems",
+        "repo": "default",
+        "type": "github"
+      }
+    },
+    "treefmt-nix": {
+      "inputs": {
+        "nixpkgs": [
+          "prisma-utils",
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1738070913,
+        "narHash": "sha256-j6jC12vCFsTGDmY2u1H12lMr62fnclNjuCtAdF1a4Nk=",
+        "owner": "numtide",
+        "repo": "treefmt-nix",
+        "rev": "bebf27d00f7d10ba75332a0541ac43676985dea3",
+        "type": "github"
+      },
+      "original": {
+        "owner": "numtide",
+        "repo": "treefmt-nix",
         "type": "github"
       }
     }
